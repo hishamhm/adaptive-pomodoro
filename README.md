@@ -9,6 +9,7 @@ for a longer break later.
 # Running
 
 * visit <a href="http://hisham.hm/adaptive-pomodoro">http://hisham.hm/adaptive-pomodoro</a>
+* or <a href="http://hishamhm.github.io/adaptive-pomodoro">http://hishamhm.github.io/adaptive-pomodoro</a>
 * or clone this repo and run locally
 
 ## License
