@@ -1,0 +1,222 @@
+<html>
+
+<head>
+<meta charset="UTF-8">
+
+<script>
+
+var clocks = [];
+
+var pomodoroTime = 25 * 60;
+var breakTime = 5 * 60;
+
+var workClock;
+var breakCredit;
+var breakClock;
+var state = "stopped";
+var lastTime;
+var pomodoros;
+var pomoCount;
+
+var audio = new Audio("alarm.mp3");
+
+function showTime(div, time) {
+   time = Math.floor(time);
+   var sign = "";
+   if (time < 0) {
+      sign = "-";
+      time = Math.abs(time);
+   }
+   var seconds = time % 60;
+   var minutes = Math.floor(time / 60);
+   var hours = Math.floor(time / 3600);
+   var secondsStr = ( seconds < 10 ? "0" : "" ) + seconds;
+   var minutesStr = ( minutes < 10 ? "0" : "" ) + minutes;
+   if (hours > 0) {
+      minutesStr = hours + ":" + minutesStr;
+   }
+   div.firstChild.nodeValue = sign + minutesStr + ":" + secondsStr;
+}
+
+function update() {
+   var now = new Date().getTime();
+   var delta = (now - lastTime) / 1000;
+   lastTime = now;
+   if (state == "working") {
+      workClock.time += delta;
+      breakCredit.time += (delta / (pomodoroTime / breakTime));
+      var pomos = "";
+      var nPomos = Math.floor(workClock.time / (pomodoroTime));
+      for (var i = 0; i < nPomos; i++) {
+         pomos = pomos + "\u{1f345}";
+      }
+      pomoCount.firstChild.nodeValue = nPomos + " pomodoro" + (nPomos != 1 ? "s" : "") + (nPomos > 0 ? "!" : "");
+      pomodoros.firstChild.nodeValue = (nPomos > 0 ? pomos : "-");
+   } else if (state == "breaking" || state == "breaking_played") {
+      breakClock.time += delta;
+      breakCredit.time -= delta;
+      if (state == "breaking" && breakCredit.time <= 0) {
+         audio.currentTime = 0;
+         audio.play();
+         state = "breaking_played";
+      }
+   }
+   breakCredit.div.style.color = breakCredit.time < 0 ? "red" : "black";
+   for (var i = 0; i < clocks.length; i++) {
+      var clock = clocks[i];
+      showTime(clock.div, clock.time);
+   }
+}
+
+function startWorkClock() {
+   state = "working";
+   workClock.div.style.color = "#009900";
+   breakClock.div.style.color = "black";
+   breakClock.div.style.color = "black";
+   audio.pause();
+}
+
+function startBreakClock() {
+   state = "breaking";
+   workClock.div.style.color = "black";
+   breakClock.div.style.color = "#009900";
+   audio.pause();
+}
+
+function pauseClocks() {
+   state = "paused";
+   workClock.div.style.color = "red";
+   breakClock.div.style.color = "red";
+   audio.pause();
+}
+
+function main() {
+   var now = new Date().getTime();
+   lastTime = now;
+   pomodoros = document.getElementById("pomodoros");
+   pomoCount = document.getElementById("pomoCount");
+   workClock = { "div": document.getElementById("workClock"), "time": 0 };
+   breakCredit = { "div": document.getElementById("breakCredit"), "time": 0 };
+   breakClock = { "div": document.getElementById("breakClock"), "time": 0 };
+
+   clocks.push(workClock);
+   clocks.push(breakCredit);
+   clocks.push(breakClock);
+   setInterval("update()", 100);
+}
+
+</script>
+
+<style>
+@font-face {
+  font-family: 'Raleway';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Raleway'), local('Raleway-Regular'), url("raleway.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+}
+body {
+   background-color: #e0e0e0;
+}
+.header {
+   font-family: 'Raleway', sans-serif;
+   color: #404040;
+   width: 50%;
+   margin: 0 auto;
+   font-size: 1.2vw;
+}
+.header h1 {
+   color: #303030;
+   text-align: center;
+}
+.pomodoros {
+   width: 100%;
+   float: left;
+   text-align: center;
+   font-size: 2vw;
+}
+.pomoCount {
+   width: 100%;
+   float: left;
+   text-align: center;
+   font-size: 0.5vw;
+}
+.panel {
+   margin-top: 50px;
+   width: 33%;
+   float: left;
+   text-align: center;
+}
+.clock {
+   font-size: 3vw;
+}
+.buttons {
+   float: left;
+   width: 100%;
+   margin-top: 50px;
+   text-align: center;
+}
+.footer {
+   font-family: 'Raleway', sans-serif;
+   font-size: 1vw;
+   float: left;
+   width: 100%;
+   margin-top: 50px;
+   text-align: center;
+}
+a {
+   text-decoration: none;
+   color: #3030ff;
+}
+a:visited {
+   text-decoration: none;
+   color: #3030ff;
+}
+</style>
+
+</head>
+
+<body onload="main();">
+
+<div class="header">
+<h1>Adaptive Pomodoro Clock</h1>
+<p>This is an experiment of an alternative "pomodoro" time tracking scheme,
+designed to avoid breaking your flow. It won't interrupt you with a break time
+when you complete one pomodoro (25 minutes), instead it will accumulate time
+for a longer break later.</p>
+</div>
+
+<div class="pomodoros" id="pomodoros">&nbsp;</div>
+<div class="pomoCount" id="pomoCount">&nbsp;</div>
+
+<div class="panel">
+<h2>Work clock</h2>
+<div class="clock" id="workClock">&nbsp;</div>
+</div>
+
+<div class="panel">
+<h2>Break credit</h2>
+<div class="clock" id="breakCredit">&nbsp;</div>
+</div>
+
+<div class="panel">
+<h2>Break clock</h2>
+<div class="clock" id="breakClock">&nbsp;</div>
+</div>
+
+<div class="panel">
+<button onclick="startWorkClock();">Work!</button>
+</div>
+<div class="panel">
+<button onclick="pauseClocks();">Pause</button>
+</div>
+<div class="panel">
+<button onclick="startBreakClock();">Break!</button>
+</div>
+
+<div class="footer">
+<p>by <a href="http://hisham.hm/">hisham.hm</a> (<a href="http://twitter.com/hishamhm/">@hisham_hm</a> on Twitter) - <a href="http://github.com/hishamhm/adaptive-pomodoro">source</a></p>
+</div>
+
+</body>
+</html>
