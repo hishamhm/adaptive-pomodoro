@@ -28,7 +28,7 @@ function showTime(div, time) {
       time = Math.abs(time);
    }
    var seconds = time % 60;
-   var minutes = Math.floor(time / 60);
+   var minutes = (Math.floor(time / 60) % 60);
    var hours = Math.floor(time / 3600);
    var secondsStr = ( seconds < 10 ? "0" : "" ) + seconds;
    var minutesStr = ( minutes < 10 ? "0" : "" ) + minutes;
